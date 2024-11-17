@@ -14,7 +14,11 @@ const FilePicker: React.FC = () => {
     }
   }
 
-  return <button onClick={handleFilePick}>Pick a JSON File</button>
+  return (
+    <button onClick={handleFilePick} className="rounded-lg bg-slate-400">
+      Pick a JSON File
+    </button>
+  )
 }
 
 export default FilePicker
