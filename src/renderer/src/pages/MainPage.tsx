@@ -1,7 +1,7 @@
 import JsonSection from '@renderer/components/JsonSection'
 import MyButton from '@renderer/components/MyButton'
 import VideoSection from '@renderer/components/VideoSection'
-import { useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 
 export function MainPage() {
   const [teamsPath, setTeamsPath] = useState<string | undefined>(undefined)
@@ -9,6 +9,12 @@ export function MainPage() {
   const [scoresPath, setScoresPath] = useState<string | undefined>(undefined)
   const [scoresContent, setScoresContent] = useState<string | undefined>(undefined)
   const [videoPath, setVideoPath] = useState<string | undefined>(undefined)
+
+  const [cliOutput, setCliOutput] = useState<string[]>([])
+  const [percentage, setPercentage] = useState<number | undefined>(undefined)
+  const [remainingTime, setRemainingTime] = useState<string | undefined>(undefined)
+
+  const indexRef = useRef(0)
 
   const handleCopyFile = async () => {
     try {
@@ -58,7 +64,88 @@ export function MainPage() {
     } catch (error) {
       console.error('Error:', error)
     }
+
+    try {
+      const { ipcRenderer } = window.electron
+      await ipcRenderer.invoke('run-docker-container')
+    } catch (error) {
+      console.error('Error:', error)
+    }
   }
+
+  const handleCliOutput = useCallback(async () => {
+    try {
+      const { ipcRenderer } = window.electron
+      const result = await ipcRenderer.invoke(
+        'run-command',
+        'docker logs --since=0.1s scoreboard_renderer'
+      )
+      if (result.success) {
+        const resultSplit = (result.output as string).split('Rendered')
+        const resultNumbers = resultSplit[resultSplit.length - 1].split(',')
+        if (cliOutput.length !== 10) {
+          setCliOutput([...cliOutput, resultNumbers[0]])
+        } else {
+          const newCliOutput = structuredClone(cliOutput)
+          newCliOutput[indexRef.current] = resultNumbers[0]
+          setCliOutput(newCliOutput)
+        }
+      } else {
+        console.error('Error retrieving logs', result.error)
+      }
+    } catch (error) {
+      console.error('Error:', error)
+    }
+  }, [cliOutput])
+
+  useEffect(() => {
+    const interval = setInterval(handleCliOutput, 1000)
+    return () => clearInterval(interval)
+  }, [handleCliOutput])
+
+  useEffect(() => {
+    if (cliOutput.length > 0) {
+      const resultForPercentage = cliOutput[indexRef.current].split('/')
+      const currentPercentage = (
+        (parseInt(resultForPercentage[0]) / parseInt(resultForPercentage[1])) *
+        100
+      ).toFixed(2)
+      setPercentage(parseFloat(currentPercentage))
+
+      const cliOutputPercentages = cliOutput.map((output) => {
+        const resultForPercentage = output.split('/')
+        return (parseInt(resultForPercentage[0]) / parseInt(resultForPercentage[1])) * 100
+      })
+
+      const cliOutputPercentagesSorted = cliOutputPercentages.sort((a, b) => a - b)
+
+      const meanPercentages =
+        cliOutputPercentagesSorted.reduce((acc, curr, currIndex, array) => {
+          const percentageProgress = currIndex === 0 ? 0 : curr - array[currIndex - 1]
+          console.log({ acc, curr, currIndex, array, percentageProgress })
+          return acc + percentageProgress
+        }, 0) / cliOutput.length
+
+      const remainingPercentage = 100 - parseFloat(currentPercentage)
+      const remainingTimeInSeconds = remainingPercentage / meanPercentages
+
+      const hours = Math.floor(remainingTimeInSeconds / 3600)
+      const minutes = Math.floor((remainingTimeInSeconds % 3600) / 60)
+      const seconds = Math.floor(remainingTimeInSeconds % 60)
+      const formattedTime = `${hours}h ${minutes}m ${seconds}s`
+      setRemainingTime(formattedTime)
+
+      console.log({
+        cliOutput,
+        cliOutputPercentages,
+        cliOutputPercentagesSorted,
+        meanPercentages,
+        remainingTimeInSeconds
+      })
+
+      indexRef.current = (indexRef.current + 1) % 10
+    }
+  }, [cliOutput])
 
   return (
     <div className="flex flex-col w-screen h-screen bg-slate-950">
@@ -79,6 +166,8 @@ export function MainPage() {
         />
         <VideoSection fileType="Video" filePath={videoPath} setFilePath={setVideoPath} />
         <MyButton onClick={handleCopyFile} label="Start Rendering" />
+        {percentage && <div className="text-white">{`${percentage}%`}</div>}
+        {remainingTime && <div className="text-white">{remainingTime}</div>}
       </div>
     </div>
   )

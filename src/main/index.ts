@@ -3,6 +3,7 @@ import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 import * as fs from 'fs/promises'
+import { exec } from 'child_process'
 
 let mainWindow: BrowserWindow
 
@@ -118,4 +119,35 @@ ipcMain.handle('copy-file', async (_, sourcePath, destinationPath) => {
     console.error('Error copying file:', error)
     return { success: false, error: error instanceof Error ? error.message : 'Unknown error' }
   }
+})
+
+ipcMain.handle('run-docker-container', async () => {
+  const appPath = app.getAppPath()
+  console.log(appPath)
+
+  return new Promise((resolve, reject) => {
+    const command = `docker run --name scoreboard_renderer -v ${appPath}\\public\\rendering-assets:/public -v ${appPath}\\out:/out scoreboard npx remotion render`
+    exec(command, (error, stdout) => {
+      if (error) {
+        console.error('Error running Docker container:', error)
+        reject({ success: false, error: error.message })
+      } else {
+        console.log('Docker container started:', stdout)
+        resolve({ success: true, output: stdout })
+      }
+    })
+  })
+})
+
+ipcMain.handle('run-command', async (_, command) => {
+  return new Promise((resolve, reject) => {
+    exec(command, (error, stdout, stderr) => {
+      if (error) {
+        console.error('Error running command:', error)
+        reject({ success: false, error: error.message })
+      } else {
+        resolve({ success: true, output: stdout || stderr })
+      }
+    })
+  })
 })
