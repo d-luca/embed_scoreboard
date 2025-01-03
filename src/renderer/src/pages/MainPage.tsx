@@ -1,7 +1,10 @@
 import JsonSection from '@renderer/components/JsonSection'
 import MyButton from '@renderer/components/MyButton'
+import Progressbar from '@renderer/components/Progressbar'
 import VideoSection from '@renderer/components/VideoSection'
 import { useCallback, useEffect, useRef, useState } from 'react'
+
+const NUMBER_OF_RECORDS = 50
 
 export function MainPage() {
   const [teamsPath, setTeamsPath] = useState<string | undefined>(undefined)
@@ -73,6 +76,18 @@ export function MainPage() {
     }
   }
 
+  const stopContainer = useCallback(async () => {
+    try {
+      const { ipcRenderer } = window.electron
+      await ipcRenderer.invoke('run-command', 'docker rm -f scoreboard_renderer')
+      setCliOutput([])
+      setPercentage(undefined)
+      setRemainingTime(undefined)
+    } catch (error) {
+      console.error('Error:', error)
+    }
+  }, [])
+
   const handleCliOutput = useCallback(async () => {
     try {
       const { ipcRenderer } = window.electron
@@ -83,12 +98,14 @@ export function MainPage() {
       if (result.success) {
         const resultSplit = (result.output as string).split('Rendered')
         const resultNumbers = resultSplit[resultSplit.length - 1].split(',')
-        if (cliOutput.length !== 10) {
-          setCliOutput([...cliOutput, resultNumbers[0]])
-        } else {
-          const newCliOutput = structuredClone(cliOutput)
-          newCliOutput[indexRef.current] = resultNumbers[0]
-          setCliOutput(newCliOutput)
+        if (resultNumbers[0]) {
+          if (cliOutput.length !== NUMBER_OF_RECORDS) {
+            setCliOutput([...cliOutput, resultNumbers[0]])
+          } else {
+            const newCliOutput = structuredClone(cliOutput)
+            newCliOutput[indexRef.current] = resultNumbers[0]
+            setCliOutput(newCliOutput)
+          }
         }
       } else {
         console.error('Error retrieving logs', result.error)
@@ -122,7 +139,7 @@ export function MainPage() {
       const meanPercentages =
         cliOutputPercentagesSorted.reduce((acc, curr, currIndex, array) => {
           const percentageProgress = currIndex === 0 ? 0 : curr - array[currIndex - 1]
-          console.log({ acc, curr, currIndex, array, percentageProgress })
+          // console.log({ acc, curr, currIndex, array, percentageProgress })
           return acc + percentageProgress
         }, 0) / cliOutput.length
 
@@ -135,15 +152,15 @@ export function MainPage() {
       const formattedTime = `${hours}h ${minutes}m ${seconds}s`
       setRemainingTime(formattedTime)
 
-      console.log({
-        cliOutput,
-        cliOutputPercentages,
-        cliOutputPercentagesSorted,
-        meanPercentages,
-        remainingTimeInSeconds
-      })
+      // console.log({
+      //   cliOutput,
+      //   cliOutputPercentages,
+      //   cliOutputPercentagesSorted,
+      //   meanPercentages,
+      //   remainingTimeInSeconds
+      // })
 
-      indexRef.current = (indexRef.current + 1) % 10
+      indexRef.current = (indexRef.current + 1) % NUMBER_OF_RECORDS
     }
   }, [cliOutput])
 
@@ -165,8 +182,11 @@ export function MainPage() {
           setFileContent={setScoresContent}
         />
         <VideoSection fileType="Video" filePath={videoPath} setFilePath={setVideoPath} />
-        <MyButton onClick={handleCopyFile} label="Start Rendering" />
-        {percentage && <div className="text-white">{`${percentage}%`}</div>}
+        <MyButton
+          onClick={cliOutput.length > 0 ? stopContainer : handleCopyFile}
+          label={cliOutput.length > 0 ? 'Stop Rendering' : 'Start Rendering'}
+        />
+        {percentage && <Progressbar progress={percentage} />}
         {remainingTime && <div className="text-white">{remainingTime}</div>}
       </div>
     </div>

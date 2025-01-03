@@ -23,6 +23,7 @@
   "dependencies": {
     "@electron-toolkit/preload": "^3.0.1",
     "@electron-toolkit/utils": "^3.0.0",
+    "@radix-ui/react-progress": "^1.1.1",
     "autoprefixer": "^10.4.20",
     "dmg-builder": "24.13.3",
     "electron-builder-squirrel-windows": "24.13.3",
