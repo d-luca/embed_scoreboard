@@ -24,3 +24,9 @@ if (process.contextIsolated) {
   // @ts-ignore (define in dts)
   window.api = api
 }
+
+contextBridge.exposeInMainWorld('electron', {
+  ipcRenderer: {
+    invoke: (channel: string, ...args: any[]) => ipcRenderer.invoke(channel, ...args),
+  },
+});

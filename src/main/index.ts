@@ -76,7 +76,7 @@ app.on('window-all-closed', () => {
 // In this file you can include the rest of your app"s specific main process
 // code. You can also put them in separate files and require them here.
 
-ipcMain.handle('pick-file', async () => {
+ipcMain.handle('pick-json-file', async () => {
   const result = await dialog.showOpenDialog(mainWindow, {
     properties: ['openFile'],
     filters: [{ name: 'JSON Files', extensions: ['json'] }]
@@ -89,7 +89,33 @@ ipcMain.handle('pick-file', async () => {
   return result.filePaths[0]
 })
 
-ipcMain.handle('read-file', async (event, filePath) => {
+ipcMain.handle('pick-video-file', async () => {
+  const result = await dialog.showOpenDialog(mainWindow, {
+    properties: ['openFile'],
+    filters: [{ name: 'Video Files', extensions: ['mp4'] }]
+  })
+
+  if (result.canceled || result.filePaths.length === 0) {
+    return null
+  }
+
+  return result.filePaths[0]
+})
+
+ipcMain.handle('read-file', async (_, filePath) => {
   const content = await fs.readFile(filePath, 'utf-8')
   return JSON.parse(content)
+})
+
+ipcMain.handle('copy-file', async (_, sourcePath, destinationPath) => {
+  try {
+    const destinationDir = join(destinationPath, '..')
+    console.log(destinationDir)
+    await fs.mkdir(destinationDir, { recursive: true })
+    await fs.copyFile(sourcePath, destinationPath)
+    return { success: true }
+  } catch (error) {
+    console.error('Error copying file:', error)
+    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' }
+  }
 })
