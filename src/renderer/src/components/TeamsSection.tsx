@@ -1,27 +1,43 @@
-import { TeamsForm } from '@renderer/types/teamsForm'
-import { UseFormRegister } from 'react-hook-form'
 import { ColorPicker } from './ColorPicker'
 
 type TeamsSectionProps = {
-  register: UseFormRegister<TeamsForm>
   homeColor: string | undefined
   setHomeColor: (color: string | undefined) => void
   awayColor: string | undefined
   setAwayColor: (color: string | undefined) => void
+  homeName: string | undefined
+  setHomeName: (name: string | undefined) => void
+  awayName: string | undefined
+  setAwayName: (name: string | undefined) => void
 }
 
 const TeamsSection: React.FC<TeamsSectionProps> = ({
-  register,
   awayColor,
   homeColor,
   setAwayColor,
-  setHomeColor
+  setHomeColor,
+  setAwayName,
+  setHomeName,
+  homeName,
+  awayName
 }) => {
+  const handleInputChange = (
+    event: React.ChangeEvent<HTMLInputElement>,
+    setFunction: (name: string | undefined) => void
+  ) => {
+    setFunction(event.target.value)
+  }
+
   return (
     <div className="flex flex-col gap-1 w-full">
       <div className="flex gap-2">
         <div className="text-slate-100">Team Home:</div>
-        <input {...register('teamHomeName')} />
+        <input
+          value={homeName}
+          onChange={(e) => {
+            handleInputChange(e, setHomeName)
+          }}
+        />
         <ColorPicker color={homeColor ?? '#00ff00'} setColor={setHomeColor}>
           <div
             style={{ backgroundColor: homeColor ?? '#00ff00' }}
@@ -32,7 +48,12 @@ const TeamsSection: React.FC<TeamsSectionProps> = ({
 
       <div className="flex gap-2">
         <div className="text-slate-100">Team Away:</div>
-        <input {...register('teamAwayName')} />
+        <input
+          value={awayName}
+          onChange={(e) => {
+            handleInputChange(e, setAwayName)
+          }}
+        />
         <ColorPicker color={awayColor ?? '#ff0000'} setColor={setAwayColor}>
           <div
             style={{ backgroundColor: awayColor ?? '#ff0000' }}

@@ -1,11 +1,6 @@
 export type TeamsData = {
-  teamHomeName: string
-  teamAwayName: string
+  teamHomeName: string | undefined
+  teamAwayName: string | undefined
   teamHomeColor: string | undefined
   teamAwayColor: string | undefined
-}
-
-export type TeamsForm = {
-  teamHomeName: string
-  teamAwayName: string
 }

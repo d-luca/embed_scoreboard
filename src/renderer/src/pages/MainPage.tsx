@@ -1,17 +1,15 @@
 import JsonSection from '@renderer/components/JsonSection'
 import MyButton from '@renderer/components/MyButton'
 import Progressbar from '@renderer/components/Progressbar'
+import { Scoreboard } from '@renderer/components/Scoreboard'
 import TeamsSection from '@renderer/components/TeamsSection'
 import VideoSection from '@renderer/components/VideoSection'
-import { TeamsData, TeamsForm } from '@renderer/types/teamsForm'
+import { TeamsData } from '@renderer/types/teamsForm'
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { SubmitHandler, useForm } from 'react-hook-form'
 
 const NUMBER_OF_RECORDS = 20
 
 export function MainPage() {
-  const { register, handleSubmit } = useForm<TeamsForm>()
-
   const [scoresPath, setScoresPath] = useState<string | undefined>(undefined)
   const [scoresContent, setScoresContent] = useState<string | undefined>(undefined)
   const [videoPath, setVideoPath] = useState<string | undefined>(undefined)
@@ -20,6 +18,8 @@ export function MainPage() {
   const [remainingTime, setRemainingTime] = useState<string | undefined>(undefined)
   const [homeColor, setHomeColor] = useState<string | undefined>('#00ff00')
   const [awayColor, setAwayColor] = useState<string | undefined>('#ff0000')
+  const [homeName, setHomeName] = useState<string | undefined>('T-H')
+  const [awayName, setAwayName] = useState<string | undefined>('T-A')
 
   const indexRef = useRef(0)
 
@@ -168,30 +168,48 @@ export function MainPage() {
     }
   }, [cliOutput])
 
-  const onSubmit: SubmitHandler<TeamsForm> = (data) => {
+  const onSubmit = () => {
     if (cliOutput.length > 0) {
       stopContainer()
     } else {
-      console.log({ data, homeColor, awayColor })
-      writeJsonFile({ ...data, teamHomeColor: homeColor, teamAwayColor: awayColor })
+      console.log({ homeName, awayName, homeColor, awayColor })
+      writeJsonFile({
+        teamHomeName: homeName,
+        teamAwayName: awayName,
+        teamHomeColor: homeColor,
+        teamAwayColor: awayColor
+      })
       startContainer()
     }
     return
   }
 
   return (
-    <form
-      className="flex flex-col w-screen h-screen bg-slate-950"
-      onSubmit={handleSubmit(onSubmit)}
-    >
-      <div className="flex flex-col size-full gap-2">
-        <TeamsSection
-          register={register}
-          awayColor={awayColor}
-          homeColor={homeColor}
-          setAwayColor={setAwayColor}
-          setHomeColor={setHomeColor}
-        />
+    <div className="flex flex-col w-screen h-screen bg-slate-950 overflow-hidden">
+      <div className="flex flex-col size-full gap-2 overflow-hidden">
+        <div className="flex items-center w-full gap-2 overflow-hidden">
+          <div className="w-1/2">
+            <TeamsSection
+              awayColor={awayColor}
+              homeColor={homeColor}
+              setAwayColor={setAwayColor}
+              setHomeColor={setHomeColor}
+              awayName={awayName}
+              homeName={homeName}
+              setAwayName={setAwayName}
+              setHomeName={setHomeName}
+            />
+          </div>
+          <div className="flex w-1/2 justify-center">
+            <Scoreboard
+              teamAwayColor={awayColor}
+              teamAwayName={awayName}
+              teamHomeColor={homeColor}
+              teamHomeName={homeName}
+            />
+          </div>
+        </div>
+
         <JsonSection
           fileType="Scores"
           filePath={scoresPath}
@@ -203,6 +221,7 @@ export function MainPage() {
         <MyButton
           type="submit"
           label={cliOutput.length > 0 ? 'Stop Rendering' : 'Start Rendering'}
+          onClick={onSubmit}
         />
         {percentage && <Progressbar progress={percentage} />}
         {remainingTime && (
@@ -213,6 +232,6 @@ export function MainPage() {
           </div>
         )}
       </div>
-    </form>
+    </div>
   )
 }
