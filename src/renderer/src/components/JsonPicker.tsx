@@ -26,7 +26,7 @@ const JsonPicker: React.FC<JsonPickerProps> = ({ setFilePath, setFileContent }) 
     }
   }
 
-  return <MyButton onClick={handleFilePick} label="Pick a JSON File" />
+  return <MyButton type="button" onClick={handleFilePick} label="Pick a JSON File" />
 }
 
 export default JsonPicker

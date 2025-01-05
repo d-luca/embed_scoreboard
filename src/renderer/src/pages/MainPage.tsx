@@ -1,41 +1,44 @@
 import JsonSection from '@renderer/components/JsonSection'
 import MyButton from '@renderer/components/MyButton'
 import Progressbar from '@renderer/components/Progressbar'
+import TeamsSection from '@renderer/components/TeamsSection'
 import VideoSection from '@renderer/components/VideoSection'
+import { TeamsData, TeamsForm } from '@renderer/types/teamsForm'
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { SubmitHandler, useForm } from 'react-hook-form'
 
-const NUMBER_OF_RECORDS = 50
+const NUMBER_OF_RECORDS = 20
 
 export function MainPage() {
-  const [teamsPath, setTeamsPath] = useState<string | undefined>(undefined)
-  const [teamsContent, setTeamsContent] = useState<string | undefined>(undefined)
+  const { register, handleSubmit } = useForm<TeamsForm>()
+
   const [scoresPath, setScoresPath] = useState<string | undefined>(undefined)
   const [scoresContent, setScoresContent] = useState<string | undefined>(undefined)
   const [videoPath, setVideoPath] = useState<string | undefined>(undefined)
-
   const [cliOutput, setCliOutput] = useState<string[]>([])
   const [percentage, setPercentage] = useState<number | undefined>(undefined)
   const [remainingTime, setRemainingTime] = useState<string | undefined>(undefined)
+  const [homeColor, setHomeColor] = useState<string | undefined>('#00ff00')
+  const [awayColor, setAwayColor] = useState<string | undefined>('#ff0000')
 
   const indexRef = useRef(0)
 
-  const handleCopyFile = async () => {
+  const writeJsonFile = useCallback(async (data: TeamsData) => {
     try {
       const { ipcRenderer } = window.electron
-      const result = await ipcRenderer.invoke(
-        'copy-file',
-        teamsPath,
-        './public/rendering-assets/match-teams.json'
-      )
+
+      const result = await ipcRenderer.invoke('write-json-file', data)
       if (result.success) {
-        console.log('File copied successfully')
+        console.log('JSON file written successfully')
       } else {
-        console.error('Error copying file:', result.error)
+        console.error('Error writing JSON file:', result.error)
       }
     } catch (error) {
       console.error('Error:', error)
     }
+  }, [])
 
+  const startContainer = async () => {
     try {
       const { ipcRenderer } = window.electron
       const result = await ipcRenderer.invoke(
@@ -83,6 +86,7 @@ export function MainPage() {
       setCliOutput([])
       setPercentage(undefined)
       setRemainingTime(undefined)
+      indexRef.current = 0
     } catch (error) {
       console.error('Error:', error)
     }
@@ -152,27 +156,41 @@ export function MainPage() {
       const formattedTime = `${hours}h ${minutes}m ${seconds}s`
       setRemainingTime(formattedTime)
 
-      // console.log({
-      //   cliOutput,
-      //   cliOutputPercentages,
-      //   cliOutputPercentagesSorted,
-      //   meanPercentages,
-      //   remainingTimeInSeconds
-      // })
+      console.log({
+        cliOutput,
+        cliOutputPercentages,
+        cliOutputPercentagesSorted,
+        meanPercentages,
+        remainingTimeInSeconds
+      })
 
       indexRef.current = (indexRef.current + 1) % NUMBER_OF_RECORDS
     }
   }, [cliOutput])
 
+  const onSubmit: SubmitHandler<TeamsForm> = (data) => {
+    if (cliOutput.length > 0) {
+      stopContainer()
+    } else {
+      console.log({ data, homeColor, awayColor })
+      writeJsonFile({ ...data, teamHomeColor: homeColor, teamAwayColor: awayColor })
+      startContainer()
+    }
+    return
+  }
+
   return (
-    <div className="flex flex-col w-screen h-screen bg-slate-950">
+    <form
+      className="flex flex-col w-screen h-screen bg-slate-950"
+      onSubmit={handleSubmit(onSubmit)}
+    >
       <div className="flex flex-col size-full gap-2">
-        <JsonSection
-          fileType="Teams"
-          filePath={teamsPath}
-          fileContent={teamsContent}
-          setFilePath={setTeamsPath}
-          setFileContent={setTeamsContent}
+        <TeamsSection
+          register={register}
+          awayColor={awayColor}
+          homeColor={homeColor}
+          setAwayColor={setAwayColor}
+          setHomeColor={setHomeColor}
         />
         <JsonSection
           fileType="Scores"
@@ -183,12 +201,18 @@ export function MainPage() {
         />
         <VideoSection fileType="Video" filePath={videoPath} setFilePath={setVideoPath} />
         <MyButton
-          onClick={cliOutput.length > 0 ? stopContainer : handleCopyFile}
+          type="submit"
           label={cliOutput.length > 0 ? 'Stop Rendering' : 'Start Rendering'}
         />
         {percentage && <Progressbar progress={percentage} />}
-        {remainingTime && <div className="text-white">{remainingTime}</div>}
+        {remainingTime && (
+          <div className="text-white">
+            {remainingTime.toLowerCase().includes('nan')
+              ? 'Calculating remaining time ...'
+              : remainingTime}
+          </div>
+        )}
       </div>
-    </div>
+    </form>
   )
 }

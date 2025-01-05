@@ -151,3 +151,15 @@ ipcMain.handle('run-command', async (_, command) => {
     })
   })
 })
+
+ipcMain.handle('write-json-file', async (_, data) => {
+  try {
+    const appPath = app.getAppPath()
+    const jsonData = JSON.stringify(data, null, 2)
+    await fs.writeFile(`${appPath}\\public\\rendering-assets\\match-teams.json`, jsonData, 'utf-8')
+    return { success: true }
+  } catch (error) {
+    console.error('Error writing JSON file:', error)
+    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' }
+  }
+})

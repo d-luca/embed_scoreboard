@@ -26,7 +26,7 @@ const VideoPicker: React.FC<VideoPickerProps> = ({ setFilePath }) => {
     }
   }
 
-  return <MyButton onClick={handleFilePick} label="Pick a Video File" />
+  return <MyButton type="button" onClick={handleFilePick} label="Pick a Video File" />
 }
 
 export default VideoPicker

@@ -1,12 +1,13 @@
-type MyButtonProps = {
+import { ComponentProps } from 'react'
+
+type MyButtonProps = ComponentProps<'button'> & {
   label: string
-  onClick: () => void
 }
 
-const MyButton: React.FC<MyButtonProps> = ({ label, onClick }) => {
+const MyButton: React.FC<MyButtonProps> = (props) => {
   return (
-    <button onClick={onClick} className="rounded-lg bg-slate-400">
-      {label}
+    <button {...props} onClick={props.onClick} className="rounded-lg bg-slate-400">
+      {props.label}
     </button>
   )
 }
