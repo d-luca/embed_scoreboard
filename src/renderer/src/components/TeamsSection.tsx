@@ -9,6 +9,8 @@ type TeamsSectionProps = {
   setHomeName: (name: string | undefined) => void
   awayName: string | undefined
   setAwayName: (name: string | undefined) => void
+  outputName: string | undefined
+  setOutputName: (name: string | undefined) => void
 }
 
 const TeamsSection: React.FC<TeamsSectionProps> = ({
@@ -19,7 +21,9 @@ const TeamsSection: React.FC<TeamsSectionProps> = ({
   setAwayName,
   setHomeName,
   homeName,
-  awayName
+  awayName,
+  outputName,
+  setOutputName
 }) => {
   const handleInputChange = (
     event: React.ChangeEvent<HTMLInputElement>,
@@ -60,6 +64,16 @@ const TeamsSection: React.FC<TeamsSectionProps> = ({
             className="flex size-7 flex-col gap-2 rounded-md border"
           />
         </ColorPicker>
+      </div>
+
+      <div className="flex gap-2">
+        <div className="text-slate-100">Output name:</div>
+        <input
+          value={outputName}
+          onChange={(e) => {
+            handleInputChange(e, setOutputName)
+          }}
+        />
       </div>
     </div>
   )

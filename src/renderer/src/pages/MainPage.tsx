@@ -20,6 +20,7 @@ export function MainPage() {
   const [awayColor, setAwayColor] = useState<string | undefined>('#ff0000')
   const [homeName, setHomeName] = useState<string | undefined>('T-H')
   const [awayName, setAwayName] = useState<string | undefined>('T-A')
+  const [outputName, setOutputName] = useState<string | undefined>('Scoreboard')
 
   const indexRef = useRef(0)
 
@@ -73,7 +74,7 @@ export function MainPage() {
 
     try {
       const { ipcRenderer } = window.electron
-      await ipcRenderer.invoke('run-docker-container')
+      await ipcRenderer.invoke('run-docker-container', outputName)
     } catch (error) {
       console.error('Error:', error)
     }
@@ -100,15 +101,22 @@ export function MainPage() {
         'docker logs --since=0.1s scoreboard_renderer'
       )
       if (result.success) {
-        const resultSplit = (result.output as string).split('Rendered')
-        const resultNumbers = resultSplit[resultSplit.length - 1].split(',')
-        if (resultNumbers[0]) {
-          if (cliOutput.length !== NUMBER_OF_RECORDS) {
-            setCliOutput([...cliOutput, resultNumbers[0]])
-          } else {
-            const newCliOutput = structuredClone(cliOutput)
-            newCliOutput[indexRef.current] = resultNumbers[0]
-            setCliOutput(newCliOutput)
+        console.log({ result })
+        if ((result.output as string).includes('Stitched')) {
+          setTimeout(() => {
+            stopContainer()
+          }, 10000)
+        } else {
+          const resultSplit = (result.output as string).split('Rendered')
+          const resultNumbers = resultSplit[resultSplit.length - 1].split(',')
+          if (resultNumbers[0]) {
+            if (cliOutput.length !== NUMBER_OF_RECORDS) {
+              setCliOutput([...cliOutput, resultNumbers[0]])
+            } else {
+              const newCliOutput = structuredClone(cliOutput)
+              newCliOutput[indexRef.current] = resultNumbers[0]
+              setCliOutput(newCliOutput)
+            }
           }
         }
       } else {
@@ -198,6 +206,8 @@ export function MainPage() {
               homeName={homeName}
               setAwayName={setAwayName}
               setHomeName={setHomeName}
+              outputName={outputName}
+              setOutputName={setOutputName}
             />
           </div>
           <div className="flex w-1/2 justify-center">
