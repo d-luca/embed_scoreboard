@@ -1,5 +1,5 @@
 import { ColorPicker } from './ColorPicker'
-import MyInput from './Scoreboard/MyInput'
+import MyInput from './MyInput'
 
 type TeamsSectionProps = {
   homeColor: string | undefined

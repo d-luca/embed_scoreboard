@@ -10,8 +10,10 @@ let mainWindow: BrowserWindow
 function createWindow(): void {
   // Create the browser window.
   mainWindow = new BrowserWindow({
-    width: 900,
-    height: 670,
+    width: 1080,
+    height: 720,
+    maxWidth: 1080,
+    maxHeight: 720,
     show: false,
     autoHideMenuBar: true,
     ...(process.platform === 'linux' ? { icon } : {}),
@@ -126,7 +128,7 @@ ipcMain.handle('run-docker-container', async (_, outputName) => {
   console.log(appPath)
 
   return new Promise((resolve, reject) => {
-    const command = `docker run --name scoreboard_renderer -v ${appPath}\\public\\rendering-assets:/public -v ${appPath}\\out:/out scoreboard npx remotion render --output /out/${outputName}.mp4 && docker rm -f scoreboard_renderer`
+    const command = `docker run --name scoreboard_renderer -v ${appPath}\\public\\rendering-assets:/public -v ${appPath}\\out:/out scoreboard:prod npx remotion render --output /out/${outputName}.mp4 --concurrency 100% && docker rm -f scoreboard_renderer`
     exec(command, (error, stdout) => {
       if (error) {
         console.error('Error running Docker container:', error)
