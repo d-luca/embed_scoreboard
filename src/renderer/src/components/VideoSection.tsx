@@ -16,11 +16,10 @@ const VideoSection: React.FC<VideoSectionProps> = ({
   // setFileContent
 }) => {
   return (
-    <div className="flex gap-1">
+    <div className="flex gap-4">
       <div className="flex flex-col gap-1 w-1/2">
         <div className="flex gap-1 text-slate-100">
-          {`${fileType} File:`}
-          {filePath ?? 'No file selected'}
+          {`${fileType} File: ${filePath ?? 'No file selected'}`}
         </div>
         <VideoPicker setFilePath={setFilePath} />
       </div>

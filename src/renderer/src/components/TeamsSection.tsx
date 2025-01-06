@@ -1,4 +1,5 @@
 import { ColorPicker } from './ColorPicker'
+import MyInput from './Scoreboard/MyInput'
 
 type TeamsSectionProps = {
   homeColor: string | undefined
@@ -33,10 +34,10 @@ const TeamsSection: React.FC<TeamsSectionProps> = ({
   }
 
   return (
-    <div className="flex flex-col gap-1 w-full">
-      <div className="flex gap-2">
-        <div className="text-slate-100">Team Home:</div>
-        <input
+    <div className="flex flex-col gap-2 w-full">
+      <div className="flex gap-2 items-center">
+        <div className="text-slate-100 w-36">Team Home:</div>
+        <MyInput
           value={homeName}
           onChange={(e) => {
             handleInputChange(e, setHomeName)
@@ -50,9 +51,9 @@ const TeamsSection: React.FC<TeamsSectionProps> = ({
         </ColorPicker>
       </div>
 
-      <div className="flex gap-2">
-        <div className="text-slate-100">Team Away:</div>
-        <input
+      <div className="flex gap-2 items-center">
+        <div className="text-slate-100 w-36">Team Away:</div>
+        <MyInput
           value={awayName}
           onChange={(e) => {
             handleInputChange(e, setAwayName)
@@ -66,9 +67,9 @@ const TeamsSection: React.FC<TeamsSectionProps> = ({
         </ColorPicker>
       </div>
 
-      <div className="flex gap-2">
-        <div className="text-slate-100">Output name:</div>
-        <input
+      <div className="flex gap-2 items-center">
+        <div className="text-slate-100 w-36">Output name:</div>
+        <MyInput
           value={outputName}
           onChange={(e) => {
             handleInputChange(e, setOutputName)

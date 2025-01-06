@@ -193,9 +193,11 @@ export function MainPage() {
   }
 
   return (
-    <div className="flex flex-col w-screen h-screen bg-slate-950 overflow-hidden">
-      <div className="flex flex-col size-full gap-2 overflow-hidden">
-        <div className="flex items-center w-full gap-2 overflow-hidden">
+    <div className="flex flex-col w-screen h-screen p-3 bg-slate-950 overflow-hidden text-xl font-semibold">
+      <div className="flex flex-col size-full gap-5 overflow-hidden">
+        <h1 className="text-3xl text-white">Scoreboard Renderer</h1>
+
+        <div className="flex items-center w-full gap-4 overflow-hidden">
           <div className="w-1/2">
             <TeamsSection
               awayColor={awayColor}
@@ -228,20 +230,23 @@ export function MainPage() {
           setFileContent={setScoresContent}
         />
         <VideoSection fileType="Video" filePath={videoPath} setFilePath={setVideoPath} />
-        <MyButton
-          type="submit"
-          label={cliOutput.length > 0 ? 'Stop Rendering' : 'Start Rendering'}
-          onClick={onSubmit}
-        />
-        {percentage && <Progressbar progress={percentage} />}
-        {remainingTime && (
-          <div className="text-white">
-            {remainingTime.toLowerCase().includes('nan')
-              ? 'Calculating remaining time ...'
-              : remainingTime}
-          </div>
-        )}
       </div>
+      <div className="flex flex-col gap-2 mb-4">
+        <Progressbar progress={percentage ? `${percentage}%` : 'Rendering is not running'} />
+        <div className="flex text-white">
+          <div className="text-slate-100 w-40">Remaining time:</div>
+          {remainingTime && cliOutput.length > 0
+            ? remainingTime.toLowerCase().includes('nan')
+              ? 'Calculating remaining time ...'
+              : remainingTime
+            : 'Rendering is not running'}
+        </div>
+      </div>
+      <MyButton
+        type="submit"
+        label={cliOutput.length > 0 ? 'Stop Rendering' : 'Start Rendering'}
+        onClick={onSubmit}
+      />
     </div>
   )
 }
