@@ -128,7 +128,7 @@ ipcMain.handle('run-docker-container', async (_, outputName) => {
   console.log(appPath)
 
   return new Promise((resolve, reject) => {
-    const command = `docker run --name scoreboard_renderer -v ${appPath}\\public\\rendering-assets:/public -v ${appPath}\\out:/out scoreboard:prod npx remotion render --output /out/${outputName}.mp4 --concurrency 100% && docker rm -f scoreboard_renderer && watch -n 0.5 echo "Rendering has finished"`
+    const command = `docker run --name scoreboard_renderer -v ${appPath}/public/rendering-assets:/public -v ${appPath}/out:/out scoreboard:prod /bin/sh -c "npx remotion render --output /out/${outputName}.mp4 --concurrency 100% && while true; do echo 'Rendering has finished'; sleep 0.5; done"`
     exec(command, (error, stdout) => {
       if (error) {
         console.error('Error running Docker container:', error)
