@@ -156,9 +156,10 @@ ipcMain.handle('run-command', async (_, command) => {
 
 ipcMain.handle('write-json-file', async (_, data) => {
   try {
-    const appPath = app.getAppPath()
+    const path = `${app.getAppPath()}\\public\\rendering-assets\\match-teams.json`
     const jsonData = JSON.stringify(data, null, 2)
-    await fs.writeFile(`${appPath}\\public\\rendering-assets\\match-teams.json`, jsonData, 'utf-8')
+    await fs.mkdir(join(path, '..'), { recursive: true })
+    await fs.writeFile(path, jsonData, 'utf-8')
     return { success: true }
   } catch (error) {
     console.error('Error writing JSON file:', error)
