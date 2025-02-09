@@ -102,7 +102,7 @@ export function MainPage() {
       )
       if (result.success) {
         console.log({ result })
-        if ((result.output as string).includes('Stitched')) {
+        if ((result.output as string).includes('Rendering has finished')) {
           setTimeout(() => {
             stopContainer()
           }, 10000)
